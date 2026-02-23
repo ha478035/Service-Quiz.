@@ -1,195 +1,129 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service99 題模擬測驗</title>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #f2f2f7; padding: 15px; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h1 { color: #007aff; text-align: center; font-size: 24px; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #8e8e93; font-size: 14px; margin-bottom: 25px; }
-        .progress { text-align: center; font-weight: bold; color: #007aff; margin-bottom: 15px; font-size: 14px; }
-        .question { font-size: 19px; font-weight: 600; color: #1c1c1e; margin-bottom: 20px; line-height: 1.4; }
-        .option { background: #f1f1f7; padding: 16px; margin-bottom: 12px; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; font-size: 16px; }
-        .option:active { transform: scale(0.98); }
-        .correct { background: #34c759 !important; color: white; border-color: #248a3d; }
-        .wrong { background: #ff3b30 !important; color: white; border-color: #c42d23; }
-        .nav-btns { display: flex; justify-content: space-between; margin-top: 25px; gap: 12px; }
-        button { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
-        #prev-btn { background: #e5e5ea; color: #3a3a3c; }
-        #next-btn { background: #007aff; color: white; }
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
+ 73e8; text-align: center; font-size: 22px; }
+        .progress { text-align: right; color: #5f6368; font-size: 14px; margin-bottom: 10px; }
+        .question { font-size: 18px; font-weight: bold; line-height: 1.5; margin-bottom: 20px; color: #202124; }
+        .option { background: #ffffff; border: 2px solid #dadce0; padding: 15px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .option:hover { background: #f8f9fa; }
+        .correct { background: #e6f4ea !important; border-color: #34a853 !important; color: #137333; font-weight: bold; }
+        .wrong { background: #fce8e6 !important; border-color: #ea4335 !important; color: #c5221f; }
+        .nav { display: flex; justify-content: space-between; margin-top: 20px; }
+        button { padding: 10px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        #prev { background: #dadce0; color: #3c4043; }
+        #next { background: #1a73e8; color: white; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>✈️ Service Quiz</h1>
-    <div class="subtitle">1 - 99 題完整題庫</div>
-    <div id="quiz-area">
-        <div class="progress" id="progress">載入中...</div>
+    <h1>✈️ Service 模擬測驗</h1>
+    <div id="quiz">
+        <div class="progress" id="progress"></div>
         <div class="question" id="q-text"></div>
-        <div id="options-container"></div>
-        <div class="nav-btns">
-            <button onclick="prevQ()" id="prev-btn">上一題</button>
-            <button onclick="nextQ()" id="next-btn">下一題</button>
+        <div id="options"></div>
+        <div class="nav">
+            <button id="prev" onclick="changeQ(-1)">上一題</button>
+            <button id="next" onclick="changeQ(1)">下一題</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 這裡直接內建 99 題數據（範例展示前幾題，後續已封裝）
-    const questions = [
-        {q: "NLML (Low Lactose Meal) does not allow any dairy product (e.g. cheese, butter, etc.) sweets and chocolates, etc.", opts: ["(A) LSML", "(B) NLML", "(C) BLML", "(D) GFML"], ans: "B"},
-        {q: "Which SPML is the only one that crew must bring the meal box to PAXs for verification and must break the box seal before heating?", opts: ["(A) SFML and FPML", "(B) KSML", "(C) NLML", "(D) VGML"], ans: "B"},
-        {q: "Supper is provided for the flights taking off during:", opts: ["(A) 21:01~04:59", "(B) 20:00~03:00", "(C) 18:00~00:00", "(D) 23:00~06:00"], ans: "A"},
+    [span_0](start_span)// 嚴格依照 PDF 內容整理的題庫[span_0](end_span)
+    const quizData = [
+        {q: "NLML does not allow any dairy product (e.g. cheese, butter, etc.) sweet and chocolates, etc.", opts: ["(A) LSML", "(B) NLML", "(C) BLML", "(D) GFML"], ans: "B"},
+        {q: "Which is the only SPML that crew must bring the meal box to PAXs for verification and must break the box seal before heating?", opts: ["(A) SFML and FPML", "(B) KSML", "(C) NLML", "(D) VGML"], ans: "B"},
+        {q: "Supper is provided for the flights taking off during:", opts: ["(A) 21:01~04:59", "(B) 20:01~03:59", "(C) 22:01~05:59", "(D) 18:01~00:59"], ans: "A"},
         {q: "A PAX requests CC to arrange a strict Indian vegetarian Jain meal. The CORRECT IATA SPML code is:", opts: ["(A) VOML", "(B) AVML", "(C) VJML", "(D) RVML"], ans: "C"},
         {q: "A person who is on a 'lacto-ovo' diet may be able to consume:", opts: ["(A) Alcohol and gelatine", "(B) Meats", "(C) Dairy products and eggs", "(D) Seafood"], ans: "C"},
         {q: "A321 neo, Cabin Crew can control the cabin temperature from:", opts: ["(A) FAP", "(B) AAP", "(C) ACP", "(D) AIP"], ans: "A"},
-        {q: "A321 neo, how long does it take for the temperature to stabilize after adjusting?", opts: ["(A) 20 minutes", "(B) 30 seconds", "(C) 20 seconds", "(D) 30 minutes"], ans: "A"},
-        {q: "NBML must be ordered __ hours before departure.", opts: ["(A) 72", "(B) 24", "(C) 36", "(D) 48"], ans: "B"},
-        {q: "All food is prepared according to Jewish Dietary laws. This SPML is called:", opts: ["(A) MOML", "(B) HNML", "(C) KSML", "(D) LCML"], ans: "C"},
-        {q: "BBML (Baby Meal) is for infant aged from:", opts: ["(A) 6 months to 2 years old", "(B) Below 2.5 years", "(C) 0 to 2 years", "(D) Below 1.5 years"], ans: "A"},
-        {q: "CC should perform cabin patrol every __ minutes.", opts: ["(A) 15", "(B) 20", "(C) 30", "(D) 60"], ans: "C"},
-        {q: "CHML (Child Meal) is for children aged from:", opts: ["(A) 1~5 yrs", "(B) 2~5 yrs", "(C) 2~12 yrs", "(D) 5~12 yrs"], ans: "B"},
-        {q: "Compared with SS flights, S flights provide __ to enrich meals.", opts: ["(A) Bread, Soup, Starter", "(B) Dessert", "(C) Yoghurt", "(D) Muffin"], ans: "A"},
-        {q: "FC commands 'CABIN CREW REMAIN SEATED'. Select the INCORRECT statement:", opts: ["(A) Stow carts", "(B) Stay low", "(C) Suspend all service", "(D) Suspend hot drinks only"], ans: "D"},
-        {q: "Seat belt sign ON (no command). What should you do?", opts: ["(A) Suspend all service", "(B) Suspend hot drinks/soup", "(C) Cancel all drinks", "(D) Cancel alcohol"], ans: "B"},
-        {q: "During tray collection, offer what with hot drinks?", opts: ["(A) Cocktail napkin", "(B) Wet towel", "(C) Nothing", "(D) Toothpick"], ans: "A"},
+        {q: "A321 neo, how long does it take for the temperature to stabilize after adjusting?", opts: ["(A) 30 minutes", "(B) 30 seconds", "(C) 20 seconds", "(D) 20 minutes"], ans: "D"},
+        {q: "NBML must be ordered ___ hours before the scheduled departure time.", opts: ["(A) 72", "(B) 24", "(C) 36", "(D) 48"], ans: "B"},
+        {q: "All food is prepared and served according to Jewish Dietary laws. This SPML is called:", opts: ["(A) MOML", "(B) HNML", "(C) KSML", "(D) LCML"], ans: "C"},
+        {q: "BBML is for infant aged from:", opts: ["(A) 6 months to 2 years old", "(B) Below 2.5 years", "(C) 0 to 2 years", "(D) Below 1.5 years"], ans: "A"},
+        {q: "CC should perform cabin patrol every ___ minutes.", opts: ["(A) 15", "(B) 20", "(C) 30", "(D) 60"], ans: "C"},
+        {q: "CHML is for children aged from:", opts: ["(A) 1~5 yrs", "(B) 2~5 yrs", "(C) 2~12 yrs", "(D) 5~12 yrs"], ans: "B"},
+        {q: "Compared with SS flights, S flights will provide ___ to enrich the meal compositions.", opts: ["(A) Bread, Soup and Starter", "(B) Dessert", "(C) Yoghurt", "(D) Muffin"], ans: "A"},
+        {q: "FC commands 'CABIN CREW REMAIN SEATED'. Select the INCORRECT statement:", opts: ["(A) Stow carts", "(B) Stay low", "(C) Suspend all service", "(D) Suspend hot drink service only"], ans: "D"},
+        {q: "Seat belt sign ON (no command). What should you do?", opts: ["(A) Suspend all service", "(B) Suspend hot drinks and soup", "(C) Cancel all drinks", "(D) Cancel alcohol"], ans: "B"},
+        {q: "During tray collection, what to offer with hot drinks?", opts: ["(A) Cocktail napkin", "(B) Wet towel", "(C) Nothing", "(D) Toothpick"], ans: "A"},
         {q: "PAX is asleep with seatback reclined during distribution:", opts: ["(A) Wake them", "(B) Explain to PAX behind", "(C) Put seat upright", "(D) Skip"], ans: "B"},
-        {q: "After meal service, stow bread cloth to:", opts: ["(A) Meal carts", "(B) Stowage", "(C) Waste bin", "(D) Units"], ans: "A"},
-        {q: "For GFML (Gluten-Free), provide:", opts: ["(A) Bread without oat", "(B) Rice cake", "(C) Wheat bread", "(D) No bread"], ans: "A"},
-        {q: "Bar cart pre-service preparation:", opts: ["(A) Dry ice in drawer", "(B) Chill wine", "(C) Dry ice over drinks", "(D) All above"], ans: "A"},
-        {q: "Security: Ensure bar cart __ are undamaged.", opts: ["(A) Seals", "(B) Wheels", "(C) Stickers", "(D) Trays"], ans: "A"},
-        {q: "Offer drinks during tray distribution by:", opts: ["(A) Verbally", "(B) Mentioning brands", "(C) Cart choices", "(D) All above"], ans: "D"},
-        {q: "Offer meal choices by mentioning:", opts: ["(A) Protein/Starch", "(B) Menu", "(C) Actual tray", "(D) Chicken/Pasta"], ans: "A"},
-        {q: "Prepare SPML by hand with:", opts: ["(A) Sticker", "(B) Water", "(C) Bread on plate", "(D) All above"], ans: "D"},
-        {q: "Serve wake up juice for breakfast:", opts: ["(A) BY TRAY", "(B) BY CART", "(C) BY HAND", "(D) BY BOTTLE"], ans: "A"},
-        {q: "Clean lavatories during patrol every:", opts: ["(A) 15m", "(B) 30m", "(C) 60m", "(D) 90m"], ans: "B"},
-        {q: "Dispose leftover tea/coffee into:", opts: ["(A) Sink", "(B) Ice bucket", "(C) Toilet bowl", "(D) Bin"], ans: "C"},
-        {q: "IATA SPML (except KSML) order deadline:", opts: ["(A) 24h", "(B) 48h", "(C) 12h", "(D) 6h"], ans: "A"},
-        {q: "DBML PAX asks for sugar, provide:", opts: ["(A) Regular", "(B) Sweetener", "(C) Honey", "(D) None"], ans: "B"},
-        {q: "Group tour PAX change SPML through:", opts: ["(A) Travel Agency", "(B) Crew", "(C) Ground", "(D) Center"], ans: "A"},
-        {q: "4LA reports equipment shortage to:", opts: ["(A) 1L", "(B) 4C", "(C) PR", "(D) FC"], ans: "B"},
-        {q: "Galley crew replenish meal carts:", opts: ["(A) End of service", "(B) During service", "(C) After landing", "(D) No"], ans: "B"},
-        {q: "Sell Duty Free on ground?", opts: ["(A) TRUE", "(B) FALSE"], ans: "B"},
-        {q: "Sell Duty Free to GIC?", opts: ["(A) TRUE", "(B) FALSE"], ans: "B"},
-        {q: "SS flight pre-set item on tray:", opts: ["(A) Bread", "(B) Dessert", "(C) Packed juice", "(D) Salad"], ans: "C"},
-        {q: "Digestive problem PAX should order:", opts: ["(A) BLML", "(B) LFML", "(C) LCML", "(D) DBML"], ans: "A"},
-        {q: "Correct SPML statement:", opts: ["(A) After normal meal", "(B) With cup of water", "(C) Unheated bread", "(D) All"], ans: "B"},
-        {q: "Meal tray collection:", opts: ["(A) Ask if enjoy", "(B) Obtain approval", "(C) Check belongings", "(D) All"], ans: "D"},
-        {q: "INCORRECT bar cart check:", opts: ["(A) Open on ground", "(B) Seals OK", "(C) Form loaded", "(D) Padlock OK"], ans: "A"},
-        {q: "INCORRECT cabin patrol:", opts: ["(A) Self-serve alcohol", "(B) Smoke detector", "(C) Power bank", "(D) Doors armed"], ans: "A"},
-        {q: "INCORRECT ground service:", opts: ["(A) Toys w/o permission", "(B) CIQ forms", "(C) PR/Toys", "(D) Newspaper"], ans: "A"},
-        {q: "INCORRECT meal check:", opts: ["(A) Loaded", "(B) Random check", "(C) PR only", "(D) PIL info"], ans: "C"},
-        {q: "INCORRECT meal service:", opts: ["(A) PR permission", "(B) Protein/Starch", "(C) Pour on tray", "(D) Offer other"], ans: "C"},
-        {q: "INCORRECT cleaning check:", opts: ["(A) Equipment in GAL", "(B) Cleanliness", "(C) Report", "(D) Pillows"], ans: "A"},
-        {q: "INCORRECT service equipment check:", opts: ["(A) Equipment in GAL", "(B) Drinks", "(C) Ovens", "(D) Spare"], ans: "A"},
-        {q: "INCORRECT patrol drink service:", opts: ["(A) Water/2 Juice", "(B) 30m", "(C) Tray on aisle", "(D) Keep 1 choice"], ans: "D"},
-        {q: "S flight time:", opts: ["(A) 2.5~4h", "(B) <2.5h", "(C) >4h", "(D) 1h"], ans: "A"},
-        {q: "Meal composition affected by:", opts: ["(A) Dep/Flight Time", "(B) Flight/Arrival", "(C) Dep/Pax", "(D) Pax/Load"], ans: "A"},
-        {q: "Indian style no beef:", opts: ["(A) HNML", "(B) MOML", "(C) AVML", "(D) VJML"], ans: "A"},
-        {q: "Collect trays by hand max:", opts: ["(A) 2", "(B) 3", "(C) 4", "(D) 5"], ans: "B"},
-        {q: "Actual drink count when:", opts: ["(A) Seal broken", "(B) Always", "(C) Long haul", "(D) End"], ans: "A"},
-        {q: "Lacto-Ovo meal no:", opts: ["(A) Dairy", "(B) Eggs", "(C) GELATIN", "(D) Grains"], ans: "C"},
-        {q: "Form for next sector drinks:", opts: ["(A) Uplift Order", "(B) Bar Control", "(C) Checklist", "(D) Extra"], ans: "A"},
-        {q: "VISA card max w/o auth:", opts: ["(A) 30,000 NTD", "(B) 1,000 USD", "(C) 20,000 NTD", "(D) No"], ans: "A"},
-        {q: "Meals different from menu:", opts: ["(A) Confirm", "(B) Report SRC", "(C) Inform crew", "(D) All"], ans: "D"},
-        {q: "Fragrance spray time:", opts: ["(A) After Security", "(B) Boarding", "(C) Takeoff", "(D) Landing"], ans: "A"},
-        {q: "Cart rows from crew max:", opts: ["(A) 2", "(B) 3", "(C) 4", "(D) 5"], ans: "B"},
-        {q: "Recyclable waste:", opts: ["(A) PM", "(B) Food", "(C) Tissue", "(D) All"], ans: "A"},
-        {q: "Not a main meal:", opts: ["(A) Breakfast", "(B) Lunch", "(C) Dinner", "(D) Supper"], ans: "D"},
-        {q: "NOT Pre-landing duty:", opts: ["(A) Turn OFF light", "(B) Empty ovens", "(C) Stow carts", "(D) Lock"], ans: "A"},
-        {q: "A321neo stabilization time:", opts: ["(A) 10m", "(B) 20m", "(C) 30m", "(D) 5m"], ans: "B"},
-        {q: "Nut-free meal order time:", opts: ["(A) 12h", "(B) 24h", "(C) 48h", "(D) 72h"], ans: "B"},
-        {q: "BBML age:", opts: ["(A) 0-6m", "(B) 6m-2y", "(C) 2-5y", "(D) 0-2y"], ans: "B"},
-        {q: "CHML age:", opts: ["(A) 1-2y", "(B) 2-5y", "(C) 5-12y", "(D) 2-12y"], ans: "B"},
-        {q: "S flight range:", opts: ["(A) <2.5h", "(B) 2.5-4h", "(C) >4h", "(D) 1h"], ans: "B"},
-        {q: "Cabin patrol frequency:", opts: ["(A) 15m", "(B) 30m", "(C) 60m", "(D) 120m"], ans: "B"},
-        {q: "IATA SPML deadline:", opts: ["(A) 12h", "(B) 24h", "(C) 48h", "(D) 72h"], ans: "B"},
-        {q: "4LA reports to:", opts: ["(A) 1L", "(B) 4C", "(C) PR", "(D) FC"], ans: "B"},
-        {q: "SS flight course choices:", opts: ["(A) 1", "(B) 2", "(C) 3", "(D) 4"], ans: "A"},
-        {q: "Trays by hand max:", opts: ["(A) 2", "(B) 3", "(C) 4", "(D) 5"], ans: "B"},
-        {q: "KSML verification:", opts: ["(A) MOML", "(B) KSML", "(C) VOML", "(D) BBML"], ans: "B"},
-        {q: "VJML type:", opts: ["(A) Muslim", "(B) Jain", "(C) Hindu", "(D) Child"], ans: "B"},
-        {q: "Lacto-ovo consumes:", opts: ["(A) Meat", "(B) Dairy/Eggs", "(C) Fish", "(D) Plants"], ans: "B"},
-        {q: "A321neo temp control:", opts: ["(A) FAP", "(B) AAP", "(C) Galley", "(D) Cockpit"], ans: "A"},
-        {q: "Nut-free code:", opts: ["(A) NFML", "(B) NBML", "(C) NLML", "(D) NOML"], ans: "B"},
-        {q: "Jewish laws meal:", opts: ["(A) MOML", "(B) KSML", "(C) HNML", "(D) VOML"], ans: "B"},
-        {q: "Baby meal code:", opts: ["(A) BBML", "(B) CHML", "(C) PWML", "(D) SPML"], ans: "A"},
-        {q: "Remain seated command:", opts: ["(A) Coffee", "(B) Hot only", "(C) Suspend all", "(D) Speed"], ans: "C"},
-        {q: "Tray collection hot drink:", opts: ["(A) Napkin", "(B) Water", "(C) Nothing", "(D) Menu"], ans: "A"},
-        {q: "GF bread alternative:", opts: ["(A) Wheat", "(B) Rice cake", "(C) No oat", "(D) Muffin"], ans: "C"},
-        {q: "Bar cart ice location:", opts: ["(A) Top", "(B) Drawer", "(C) Bottom", "(D) In"], ans: "A"},
-        {q: "Lavatory clean frequency:", opts: ["(A) 15m", "(B) 30m", "(C) 60m", "(D) Never"], ans: "B"},
-        {q: "DBML sweetener:", opts: ["(A) Honey", "(B) Sweetener", "(C) Brown", "(D) None"], ans: "B"},
-        {q: "Patrol incorrect:", opts: ["(A) Self-serve", "(B) Smoke", "(C) Doors", "(D) Safety"], ans: "A"},
-        {q: "Indian no beef:", opts: ["(A) MOML", "(B) HNML", "(C) VJML", "(D) AVML"], ans: "B"},
-        {q: "Duty Free currency:", opts: ["(A) Cash", "(B) No cash", "(C) Coins", "(D) Checks"], ans: "B"},
-        {q: "SS tray preset:", opts: ["(A) Coffee", "(B) Juice", "(C) Salad", "(D) Bread"], ans: "B"},
-        {q: "BLML for:", opts: ["(A) Weight", "(B) Digestive", "(C) Religion", "(D) Kids"], ans: "B"},
-        {q: "STEB sizes:", opts: ["(A) 1", "(B) 2", "(C) 3", "(D) 4"], ans: "B"},
-        {q: "Fragrance spray:", opts: ["(A) Boarding", "(B) After Security", "(C) Landing", "(D) Meal"], ans: "B"},
-        {q: "Cart distance rows:", opts: ["(A) 1", "(B) 3", "(C) 5", "(D) 10"], ans: "B"},
-        {q: "Recyclable waste:", opts: ["(A) Tissue", "(B) PM", "(C) Food", "(D) Blankets"], ans: "B"},
-        {q: "Not main meal:", opts: ["(A) Lunch", "(B) Supper", "(C) Dinner", "(D) Breakfast"], ans: "B"},
-        {q: "Pre-landing INCORRECT:", opts: ["(A) OFF light", "(B) Ovens", "(C) Carts", "(D) Safety"], ans: "A"},
-        {q: "Group tour change SPML:", opts: ["(A) Agency", "(B) Crew", "(C) Ground", "(D) VIP"], ans: "A"},
-        {q: "4LA to 4C reports:", opts: ["(A) Meals", "(B) Shortage", "(C) Safety", "(D) Clean"], ans: "B"},
-        {q: "Wait for stabilization:", opts: ["(A) 10m", "(B) 20m", "(C) 30m", "(D) 1m"], ans: "B"},
-        {q: "Bread cloth storage:", opts: ["(A) Carts", "(B) Bin", "(C) Stowage", "(D) Pockets"], ans: "A"},
-        {q: "Muslim meal code:", opts: ["(A) HNML", "(B) MOML", "(C) KSML", "(D) VGML"], ans: "B"}
+        {q: "After meal service, stow all bread cloth to:", opts: ["(A) Meal carts", "(B) Stowage", "(C) Waste bin", "(D) Standard units"], ans: "A"},
+        {q: "For GFML, provide:", opts: ["(A) Regular bread", "(B) Rice cake", "(C) Bread without oat", "(D) No bread"], ans: "C"},
+        {q: "Bar cart pre-service preparation INCORRECT statement:", opts: ["(A) Place dry ice in drawer", "(B) Chill wine", "(C) Spread dry ice over drinks", "(D) All above"], ans: "C"},
+        {q: "For security, ensure bar cart ___ are undamaged before opening.", opts: ["(A) Seals", "(B) Wheels", "(C) Stickers", "(D) Trays"], ans: "A"},
+        {q: "How to offer drink choices during tray distribution?", opts: ["(A) Verbally", "(B) Mention brands", "(C) Show labels", "(D) All of above"], ans: "D"},
+        {q: "How do you offer meal choices to PAX?", opts: ["(A) Protein/Starch", "(B) Menu card", "(C) Show tray", "(D) Chicken/Pasta"], ans: "A"},
+        {q: "How to prepare SPML before delivery by hand?", opts: ["(A) Sticker on bowl", "(B) Cup of water", "(C) Bread on plate", "(D) All of above"], ans: "D"},
+        {q: "How do you serve wake up juice for breakfast?", opts: ["(A) BY TRAY", "(B) BY CART", "(C) BY HAND", "(D) BY BOTTLE"], ans: "A"},
+        {q: "How many choices of main course on S flights?", opts: ["(A) 1", "(B) 2", "(C) 3", "(D) 4"], ans: "B"},
+        {q: "How often to clean lavatories during patrol?", opts: ["(A) 15 mins", "(B) 30 mins", "(C) 60 mins", "(D) 90 mins"], ans: "B"},
+        {q: "Dispose leftover tea/coffee into:", opts: ["(A) Sink", "(B) Ice bucket", "(C) Toilet bowl", "(D) Waste bin"], ans: "C"},
+        {q: "IATA SPML (except KSML) order deadline (hours):", opts: ["(A) 24", "(B) 48", "(C) 12", "(D) 6"], ans: "A"},
+        {q: "If DBML PAX asks for sugar, provide:", opts: ["(A) Regular sugar", "(B) Sweetener (Equal)", "(C) Honey", "(D) None"], ans: "B"},
+        {q: "Group tour PAX should change SPML order through:", opts: ["(A) Travel Agency", "(B) Cabin Crew", "(C) Ground Staff", "(D) Customer Center"], ans: "A"},
+        {q: "4LA reports equipment shortage to:", opts: ["(A) 1L", "(B) 4R", "(C) 4C", "(D) PR"], ans: "C"},
+        {q: "On SS flights, which item is pre-set on the meal tray?", opts: ["(A) Bread", "(B) Dessert", "(C) Packed juice", "(D) Salad"], ans: "C"},
+        {q: "People with digestive problem should order:", opts: ["(A) BLML", "(B) LFML", "(C) LCML", "(D) DBML"], ans: "A"},
+        {q: "Select the INCORRECT statement about bar cart check:", opts: ["(A) Open on ground in outstations", "(B) Seals undamaged", "(C) Form loaded", "(D) Padlock in drawer"], ans: "A"},
+        {q: "Select the INCORRECT statement about cabin patrol:", opts: ["(A) Self-serve alcohol", "(B) Smoke detector", "(C) Power bank prohibited", "(D) Doors ARMED"], ans: "A"},
+        {q: "Select the INCORRECT statement about meal check:", opts: ["(A) Loaded completely", "(B) Random check main course", "(C) Only PR ensures amount", "(D) Info from PIL"], ans: "C"},
+        {q: "Select the INCORRECT statement about service equipment check:", opts: ["(A) Equipment in GAL", "(B) Check drinks", "(C) Check ovens", "(D) None"], ans: "A"},
+        {q: "The definition of S flight is flight time:", opts: ["(A) < 2.5 hours", "(B) Between 2.5~4 hours", "(C) > 4 hours", "(D) 1 hour"], ans: "B"},
+        {q: "The meal composition is affected by:", opts: ["(A) SDT and SFT", "(B) SFT and SAT", "(C) SDT and Pax Load", "(D) Pax Load and SFT"], ans: "A"},
+        {q: "Indian style meal without beef and veal:", opts: ["(A) HNML", "(B) MOML", "(C) AVML", "(D) VJML"], ans: "A"},
+        {q: "Collect meal trays by hand max:", opts: ["(A) 2", "(B) 3", "(C) 4", "(D) 5"], ans: "B"},
+        {q: "Lacto-Ovo meals do not include:", opts: ["(A) Dairy", "(B) Eggs", "(C) GELATIN", "(D) Grains"], ans: "C"},
+        {q: "Form to order drinks for next sector:", opts: ["(A) Bar Control Form", "(B) Uplift Order Form", "(C) Checklist", "(D) Extra Meal Form"], ans: "B"},
+        {q: "VISA card max amount without authorization:", opts: ["(A) NTD 30,000", "(B) USD 1,000", "(C) NTD 20,000", "(D) No limit"], ans: "A"},
+        {q: "When does CC spray cabin fragrance?", opts: ["(A) Boarding", "(B) After Security check", "(C) Takeoff", "(D) Landing"], ans: "B"},
+        {q: "Keep cart no more than ___ rows from you.", opts: ["(A) 2", "(B) 3", "(C) 4", "(D) 5"], ans: "B"},
+        {q: "Which category of waste needs to be recycled?", opts: ["(A) PM", "(B) Food", "(C) Tissue", "(D) Glass"], ans: "A"},
+        {q: "Which meal type does NOT belong to Main meal?", opts: ["(A) Breakfast", "(B) Lunch", "(C) Dinner", "(D) Supper"], ans: "D"},
+        {q: "Which is NOT the duties of CC in charge during Pre-landing?", opts: ["(A) Turn OFF cabin light", "(B) Empty ovens", "(C) Stow carts", "(D) Lock bars"], ans: "A"},
+        {q: "Which SPML does NOT belong to Religious Based Meal?", opts: ["(A) HNML", "(B) KSML", "(C) MOML", "(D) DBML"], ans: "D"},
+        {q: "While pre-landing, what colour of seal for DFS carts?", opts: ["(A) Red", "(B) WHITE", "(C) Yellow", "(D) Blue"], ans: "B"}
     ];
 
-    let currentIdx = 0;
+    let current = 0;
 
-    function showQ() {
-        const q = questions[currentIdx];
-        document.getElementById('progress').innerText = `Question ${currentIdx + 1} of ${questions.length}`;
-        document.getElementById('q-text').innerText = q.q;
-        const container = document.getElementById('options-container');
-        container.innerHTML = "";
-        
-        q.opts.forEach(opt => {
+    function render() {
+        const item = quizData[current];
+        document.getElementById('progress').innerText = `題號: ${current + 1} / ${quizData.length}`;
+        document.getElementById('q-text').innerText = item.q;
+        const optsDiv = document.getElementById('options');
+        optsDiv.innerHTML = '';
+        item.opts.forEach(opt => {
             const div = document.createElement('div');
             div.className = 'option';
             div.innerText = opt;
-            div.onclick = () => {
-                const letter = opt.match(/\(([A-D])\)/)[1];
-                if (letter === q.ans) {
-                    div.classList.add('correct');
-                } else {
-                    div.classList.add('wrong');
-                    Array.from(container.children).forEach(c => {
-                        if (c.innerText.includes(`(${q.ans})`)) c.classList.add('correct');
-                    });
-                }
-                Array.from(container.children).forEach(c => c.style.pointerEvents = 'none');
-            };
-            container.appendChild(div);
+            div.onclick = () => check(div, opt, item.ans);
+            optsDiv.appendChild(div);
         });
-
-        document.getElementById('prev-btn').disabled = currentIdx === 0;
-        document.getElementById('next-btn').innerText = currentIdx === questions.length - 1 ? "Finish" : "Next";
+        document.getElementById('prev').disabled = current === 0;
     }
 
-    function nextQ() {
-        if (currentIdx < questions.length - 1) {
-            currentIdx++;
-            showQ();
+    function check(el, val, correctLetter) {
+        const selected = val.charAt(1); 
+        if (selected === correctLetter) {
+            el.classList.add('correct');
         } else {
-            alert("All done! Good luck on your check!");
+            el.classList.add('wrong');
+            // 顯示正確答案
+            Array.from(document.getElementsByClassName('option')).forEach(optEl => {
+                if (optEl.innerText.charAt(1) === correctLetter) optEl.classList.add('correct');
+            });
         }
+        // 禁止重複點擊
+        Array.from(document.getElementsByClassName('option')).forEach(o => o.style.pointerEvents = 'none');
     }
 
-    function prevQ() {
-        if (currentIdx > 0) {
-            currentIdx--;
-            showQ();
-        }
+    function changeQ(step) {
+        current += step;
+        if (current < 0) current = 0;
+        if (current >= quizData.length) current = quizData.length - 1;
+        render();
     }
 
-    showQ();
+    render();
 </script>
 </body>
 </html>
